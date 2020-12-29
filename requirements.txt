@@ -1,0 +1,40 @@
+# General
+numpy
+matplotlib
+pandas
+Pillow
+
+# Examples
+selenium
+
+# Input
+pyautogui
+opencv-python
+
+# Content generation
+cffi
+cloudpickle
+cycler
+dask
+decorator
+kiwisolver
+networkx
+pycparser
+pygit
+pyparsing
+python-dateutil
+pytz
+PyWavelets
+PyYAML
+scikit-image
+scikit-learn
+scipy
+six
+toolz
+torch
+torchvision
+tqdm
+face-recognition
+
+
+# Content reaction
