@@ -38,3 +38,6 @@ face-recognition
 
 
 # Content reaction
+gensim
+textblob
+nltk
