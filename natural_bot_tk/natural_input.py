@@ -23,9 +23,21 @@ class Mouse:
     def right_click(self):
         pyautogui.click(pyautogui.RIGHT)
 
-    def move_to(self, p_destination, max_deviation=0.05, n_steps=None, linear_progression=False):
+    def move_to(self, p_destination, 
+                max_deviation=0.05, 
+                n_steps=None, 
+                linear_progression=False,
+                noisiness=0.4, 
+                max_noise_deviation=0.9):
         '''
-        p_destination : where to go in the screen
+        Mueve el raton a un pixel dadas sus coordenadas.\n
+        `max_deviation`: La desviacion maxima de los puntos de control\n
+        `n_steps`: El numero de puntos de la curva que calcular\n
+        `linear_progression`: \n
+          - True: usamos una distribucion lineal para los puntos\n
+          - False: Usamos una distribucion triangular para los puntos\n
+        `noisiness` - Valor [0-1) que determina a que porcentaje de puntos anadir ruido \n
+        `max_noise_deviation` - Desviacion maxima 
         '''
         t_d = 0.001
         p_origin = pyautogui.position()
@@ -41,12 +53,12 @@ class Mouse:
         p_3 = np.array([x_d, y_d])
         points = self.generate_cubic_bezier(p_0, p_3, max_deviation=max_deviation, n_steps=n_steps, linear_progression=linear_progression)
 
-        # Add noise
-        #points = self._add_noise(points, 0.005, 0.01)
-
         # Bring points back to pixels
         points[:, 0] *= self._s_width
         points[:, 1] *= self._s_height
+
+        # Add noise
+        points = self.add_noise(points, noisiness, max_noise_deviation)
 
         # Move
         for p in points:
@@ -65,6 +77,16 @@ class Mouse:
                                 max_deviation=0.05,
                                 n_steps=None, 
                                 linear_progression=False):
+        ''' Calcula los puntos de una curva de bezier.\n
+        Los parametros son:\n
+        `p_0`: El punto inicial e.g. [0,0]\n
+        `p_3`: El punto final e.g. [10,10]\n
+        `max_deviation`: La desviacion maxima de los puntos de control\n
+        `n_steps`: El numero de puntos de la curva que calcular\n
+        `linear_progression`: \n
+          - True: usamos una distribucion lineal para los puntos\n
+          - False: Usamos una distribucion triangular para los puntos
+        '''
         # Calculamos los puntos de anclaje de la curva con la formula
         rand = max_deviation - np.random.uniform() * max_deviation * 2
         rand2 = max_deviation - np.random.uniform() * max_deviation * 2
@@ -80,7 +102,7 @@ class Mouse:
         # el numero de puntos intermedios sera proporcional a la distancia
         steps = np.random.randint(800, 1000) if n_steps is None else n_steps
         if linear_progression:
-            T = np.array(range(0, steps)) / steps
+            T = np.array(range(0, steps+1)) / steps
         else:
             T = np.sort(np.random.triangular(0.0, np.random.uniform(0.9,1.), 1.0, steps))
             T = np.insert(T, 0, 0, axis=0)
@@ -99,71 +121,74 @@ class Mouse:
 
         return np.array(points)
 
-    '''
-    def _add_noise(self, points, ammount, max_deviation):
-        # Calcular la cantidad de 
-        N = len(points)
-        n_points = int(N * ammount)
-        if n_points <= 1:
+    def add_noise(self, points, noisiness, max_deviation):
+        '''
+        `points` - Puntos a los que anadir ruido \n
+        `noisiness` - Valor [0-1) que determina a que porcentaje de puntos anadir ruido \n
+        `max_deviation` - Desviacion maxima 
+        '''
+        assert 1 > noisiness and noisiness >= 0
+        assert len(points) != 0
+
+        if noisiness == 0:
             return points
 
-        n_points = n_points - 1 if n_points % 2 == 1 else n_points
-        if n_points % 2 == 1:
-            n_points -= 1
-        if n_points == 0:
-            return points
+        # Calculate N points that we will create
+        n_noisy_points = int(len(points) * noisiness)
+        
+        # Make it a pair number
+        n_noisy_points = n_noisy_points if n_noisy_points % 2 == 0 else n_noisy_points - 1
 
-        # Calculamos a que puntos queremos anadir ruido
-        i_noise = np.random.choice(range(N), n_points)
+        # Get a random set of points that we will add noise to
+        i_noisy_points = []
+        for _ in range(n_noisy_points):
+            i = np.random.randint(1, len(points))
 
-        # Calculamos el ruido
-        noise_inc_x = np.random.uniform(size=n_points//2)
-        noise_inc_y = np.random.uniform(size=n_points//2)
-        noise_dec_x = np.random.uniform(size=n_points//2)
-        noise_dec_y = np.random.uniform(size=n_points//2)
+            # If we already took that index repeat
+            while i in i_noisy_points:
+                i = np.random.randint(1, len(points))
 
-        # Lo normalizamos
-        noise_inc_x /= np.sum(noise_inc_x)
-        noise_inc_y /= np.sum(noise_inc_y)
-        noise_dec_x /= np.sum(noise_dec_x)
-        noise_dec_y /= np.sum(noise_dec_y)
+            i_noisy_points.append(i)
 
-        # Convertimos el mayor valor a 1
-        noise_inc_x /= np.max(noise_inc_x)
-        noise_inc_y /= np.max(noise_inc_y)
-        noise_dec_x /= np.max(noise_dec_x)
-        noise_dec_y /= np.max(noise_dec_y)
+        # Calculate the vectors leading to those points
+        vectors = []
+        for i in i_noisy_points:
+            vectors.append(points[i] - points[i - 1])
+        vectors = np.array(vectors)
 
-        # Multiplicamos por la maxima desviacion
-        noise_inc_x *= max_deviation
-        noise_inc_y *= max_deviation
-        noise_dec_x *= max_deviation
-        noise_dec_y *= max_deviation
+        # Choose pairs of vectors
+        vs_1, vs_2 = np.split(vectors, 2)
+        is_1, is_2 = np.split(np.array(i_noisy_points), 2)
+        noise = np.zeros((len(points), 2))
+        for i_1, i_2, v_1, v_2 in zip(is_1, is_2, vs_1, vs_2):
+            # Calculate max deviations
+            max_x_deviation = abs(min(v_1[0], v_2[0]))
+            max_y_deviation = abs(min(v_1[1], v_2[1]))
 
-        # Creamos los vectores de ruido
-        noise_x = np.concatenate((noise_inc_x, -noise_dec_x))
-        noise_y = np.concatenate((noise_inc_y, -noise_dec_y))
-        np.random.shuffle(noise_x)
-        np.random.shuffle(noise_y)
+            max_x_deviation *= max_deviation
+            max_y_deviation *= max_deviation
 
-        noise_points = np.column_stack((noise_x, noise_y))
+            # Calculate noise
+            n = np.empty(2)
+            n[0] = np.random.uniform(-max_x_deviation, max_x_deviation)
+            n[1] = np.random.uniform(-max_y_deviation, max_y_deviation)
 
-        assert len(noise_points) == n_points
+            # Add opposite noise to each
+            noise[i_1] += n
+            noise[i_2] -= n
 
-        noise_count = 0
-        noise_sum = np.array((0., 0.))
-        for i in range(N):
-            if i in i_noise:
-                noise_sum += noise_points[noise_count]
-                noise_count += 1
-            points[i] += noise_sum
+        new_points = []
+        noise_sum = np.zeros(2)
+        # delete the first point 
+        new_points.append(points[0])
 
-        # A algunos puntos incrementamos y otros decrementamos
-        #i = np.random.choice(range(N), n_points)
-        #points[i] += noise_inc_x
+        # Recalculate points
+        for og_p, n in zip(points[1:], noise[1:]):
+            noise_sum += n
+            new_p = og_p + noise_sum
+            new_points.append(new_p)
 
-        return points
-    '''
+        return np.array(new_points)
 
 class Keyboard:
     def __init__(self, person_seed, layout=None):
@@ -181,6 +206,8 @@ class Keyboard:
         np.random.seed()
 
     def type_text(self, text, stress=0.3):
+        ''' Genera las teclas para el texto y las teclea'''
+
         keys = self.generate_keys(text, stress)
 
         # Press keys in that order
@@ -203,6 +230,11 @@ class Keyboard:
             print(e)
 
     def generate_keys(self, text, stress):
+        ''' Genera la secuencia de teclas y sus tiempos 
+         para teclear un texto. \n
+        `text`: El texto a teclear\n
+        `stress`: Valor que determina la velocidad y la cantidad de errores.
+        '''
         shifted_keys = '~!@#$%^&*()_+{}|:"<>?' + string.ascii_uppercase
 
         typo_posibility = stress * 0.2
@@ -330,10 +362,14 @@ class Keyboard:
         return typo_key
 
     def _generate_hold_delay_dict(self):
+        ''' Calcula un diccionario de hold delay aleatorio
+        '''
         hold_dict = {k: self._handicap * np.random.uniform(low=0.2,high=0.6) for k in self._layout.keys()}
         return hold_dict
     
     def _generate_move_delay_matrix(self):
+        ''' Calcula una matriz de tiempo de vuelo aleatoria
+        '''
         # We calculate a distance matrix for each combination of keys
         distance_matrix = np.empty((len(self._key_to_index), len(self._key_to_index)))
         for k_i, i in self._key_to_index.items():
@@ -344,20 +380,20 @@ class Keyboard:
                 distance = np.linalg.norm(pos_i - pos_j)
 
                 distance_matrix[i][j] = distance
-        
+
         # Now we sum to the places where the destination is a letter, a scalar proportional to the handicap
         for k, i in self._key_to_index.items():
             if k not in string.ascii_letters:
                 continue
-            
-            distance_matrix[:][i] += np.random.uniform(low=self._handicap, high=self._handicap+0.3) 
+
+            distance_matrix[:][i] += np.random.uniform(low=self._handicap, high=self._handicap+0.3)
 
         # Now we sum to the places where the destination is a number, a scalar proportional to the handicap
         for k, i in self._key_to_index.items():
             if k not in string.digits:
                 continue
-            
-            distance_matrix[:][i] += np.random.uniform(low=self._handicap+0.1, high=self._handicap+0.4) 
+
+            distance_matrix[:][i] += np.random.uniform(low=self._handicap+0.1, high=self._handicap+0.4)
 
         # Now we sum to the places where the destination is a symbol, a scalar proportional to the handicap
         for k, i in self._key_to_index.items():
