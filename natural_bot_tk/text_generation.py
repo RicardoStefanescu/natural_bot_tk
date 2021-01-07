@@ -1,14 +1,13 @@
-#!/usr/bin/env python3
-
 import json
 import os
 import re
 import numpy as np
 import tensorflow as tf
 
-import model as model
-import sample as sample
-import encoder as encoder
+import resources.gpt2.model as model
+import resources.gpt2.sample as sample
+import resources.gpt2.encoder as encoder
+
 
 class GPT2:
     def __init__(self, model_path):

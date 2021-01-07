@@ -13,6 +13,7 @@ import torch.nn.functional as F
 import face_recognition
 
 from .resources.motion_co_seg.part_swap import load_checkpoints, face_swap
+from .resources
 
 
 def find_similar_faces(mugshot_path, target_img_path):

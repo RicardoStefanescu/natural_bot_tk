@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from hparam import HParams
+from .hparam import HParams
 
 def default_hparams():
     return HParams(
