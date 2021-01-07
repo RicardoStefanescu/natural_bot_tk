@@ -1,6 +1,6 @@
 *.pyc
 *.ipynb
+*.png
 
 # Models
 vox-10segments.pth.tar
-

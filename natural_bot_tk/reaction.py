@@ -54,7 +54,7 @@ def get_sentiment(text, bayes=False):
         return blob.sentiment.p_pos
     else:
         blob = TextBlob(text)
-        return blob.sentiment.polarity
+        return 0.5 + blob.sentiment.polarity/2
 
 def get_keywords(text):
     # Function to check if word is noun or verb
@@ -80,11 +80,7 @@ def get_keywords(text):
 
     return result
 
-def estimate_reaction(text, interest_list, debug=False):
-    ''' Estima la reaccion a un texto dados los intereses de la persona. \n
-    `text`: String con el texto\n
-    `interest_list`: Lista de Interests
-    '''
+def estimate_reaction(text, interest_list, debug=False, bayes=True):
     # Check if the text is within our interests
     text_keywords = get_keywords(text)
 
@@ -94,7 +90,7 @@ def estimate_reaction(text, interest_list, debug=False):
 
         if matching_keywords:
             present_interests.append((interest, text_keywords.index(matching_keywords[0])))
-
+    
     if not present_interests:
         return 0.0, 0.0
 
@@ -102,13 +98,14 @@ def estimate_reaction(text, interest_list, debug=False):
     most_relevant_topic = present_interests[0][0]
 
     # Analyze text for emotion with the most relevant topic
-    text_sentiment = get_sentiment(text, True)
+    text_sentiment = get_sentiment(text, bayes)
 
     our_strenght = most_relevant_topic.get_strenght()
     our_polarity = most_relevant_topic.get_polarity()
 
-    if (our_polarity-0.5 < 0 and
-        text_sentiment - 0.5 < 0):
+    #calc_rightfulness  = lambda P_I, P_t : (1+np.sign(P_I-0.5))/2 - np.sign(P_I-0.5) * P_t
+    #percieved_text_rightfulness = calc_rightfulness(our_polarity, text_sentiment)
+    if (our_polarity-0.5 < 0):
         percieved_text_rightfulness = 1-text_sentiment
     else:
         percieved_text_rightfulness = text_sentiment
@@ -120,20 +117,17 @@ def estimate_reaction(text, interest_list, debug=False):
 
     # Calculate text reaction polarity
     react_polarity = our_radicality * percieved_text_rightfulness + 0.5 * (1-our_radicality)
-
+    
     # Calculate reaction strenght
     react_strenght = 0.5*calc_radicality(react_polarity) + 0.5 * our_strenght 
-
+    
     if debug:
-        print(most_relevant_topic.get_keywords())
+        print("Text keywords: ", text_keywords)
+        print("Chosen topic: ", most_relevant_topic.get_keywords())
         print('Text polarity', text_sentiment)
-        print('Our polarity', our_polarity)
-        print('Our strenght', our_strenght)
-        print('Topic radicality', our_radicality)
-        print('Adjusted text polarity', percieved_text_rightfulness)
-        print("Feeling", our_radicality * percieved_text_rightfulness)
-        print('Passion', 0.5 * (1-our_radicality))
-        print('Strength by polarity', 0.5*calc_radicality(react_polarity))
-        print('Strength by interest', 0.5 * our_strenght )
-
+        print('Interest polarity', our_polarity)
+        print('Interest strenght', our_strenght)
+        print('Interest radicality', our_radicality)
+        print('Percieved text rightfulness', percieved_text_rightfulness)
+    
     return react_strenght, react_polarity
