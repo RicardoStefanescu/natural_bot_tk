@@ -82,7 +82,7 @@ class GPT2:
                 for i in range(batch_size):
                     generated += 1
                     text = enc.decode(out[i])
-            print(text)
+            #print(text)
             text = re.sub(r'^(.|\n)*?Output: ', '', text)
             text = re.sub(r"<\|endtext\|>(.|\s)*", '', text).rstrip(" \r\n")
             
