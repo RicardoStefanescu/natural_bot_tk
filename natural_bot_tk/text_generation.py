@@ -14,32 +14,21 @@ class GPT2:
         self.model_path = model_path
 
     def prompt_model(self, prompt,
-            seed=None,
-            nsamples=1,
-            batch_size=1,
-            length=None,
             temperature=1,
             top_k=0,
             top_p=0.0
         ):
-        ''' With the given GPT Model generates a text given a prompt.
-        `seed`=None : Integer seed for random number generators, fix seed to reproduce
-        results\n
-        `nsamples`=1 : Number of samples to return total\n
-        `batch_size`=1 : Number of batches (only affects speed/memory).  Must divide nsamples.\n
-        `length`=None : Number of tokens in generated text, if None (default), is
-        determined by model hyperparameters\n
-        `temperature`=1 : Float value controlling randomness in boltzmann
-        distribution. Lower temperature results in less random completions. As the
-        temperature approaches zero, the model will become deterministic and
-        repetitive. Higher temperature results in more random completions.\n
-        `top_k`=0 : Integer value controlling diversity. 1 means only 1 word is
-        considered for each step (token), resulting in deterministic completions,
-        while 40 means 40 words are considered at each step. 0 (default) is a
-        special setting meaning no restrictions. 40 generally is a good value.\n
-        `top_p`=0.0 : Float value controlling diversity. Implements nucleus sampling,
-        overriding top_k if set to a value > 0. A good setting is 0.9.
+        ''' With the given GPT Model generates a text given a prompt.\n
+        `temperature`=1 : Valor controlando la aleatoriedad de la salida\n
+        `top_k`=0 : Integer que controla la diversidad. Representa el 
+                   número de palabras consideradas. 0 = sin restriccion\n
+        `top_p`=0.: Float que controla la diversidad. Un buen valor es 0.9.
         '''
+        seed=None
+        nsamples=1
+        batch_size=1
+        length=None
+
         assert nsamples % batch_size == 0
 
         model_name = self.model_path

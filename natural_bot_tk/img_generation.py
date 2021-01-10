@@ -13,10 +13,14 @@ import torch.nn.functional as F
 import face_recognition
 
 from .resources.motion_co_seg.part_swap import load_checkpoints, face_swap
-from .resources
 
 
 def find_similar_faces(mugshot_path, target_img_path):
+    ''' Encuentra caras en la imagen objetivo, y compara su similaridad con 
+    la foto de la cara.\n
+    `mugshot_path`: Ruta de la foto de la cara.\n
+    `target_img_path`: Ruta de la foto objetivo
+    '''
     # Find faces in target
     target_img_cv2 = cv2.cvtColor(cv2.imread(target_img_path), cv2.COLOR_BGR2RGB)
     face_locations = face_recognition.face_locations(target_img_cv2, model="hog")
@@ -52,6 +56,13 @@ def find_similar_faces(mugshot_path, target_img_path):
     return faces
 
 def replace_face(mugshot_path, target_img_path, face_location, gpu=False):
+    ''' Remplaza una cara sobre otra en una imagen dada la localizacion de
+    la cara objetivo.\n
+    `mugshot_path`: Ruta de la foto de la cara.\n
+    `target_img_path`: Ruta de la foto objetivo.\n
+    `face_location`: Array con la Localizacion de la cara objetivo\n
+    `gpu`: Usar gpu
+    '''
     lib_dir = os.path.dirname(os.path.realpath(__file__))
     try:
         assert os.path.exists(os.path.join(lib_dir, "resources/models/vox-10segments.pth.tar"))
@@ -98,6 +109,12 @@ def replace_face(mugshot_path, target_img_path, face_location, gpu=False):
 
 
 def replace_best_face(mugshot_path, target_img_path, threshold=0.9, gpu=False):
+    ''' Remplaza una cara sobre la mas similar en una imagen objetivo.\n
+    `mugshot_path`: Ruta de la foto de la cara.\n
+    `target_img_path`: Ruta de la foto objetivo.\n
+    `threshold`: Similaridad minima para sustituir caras\n
+    `gpu`: Usar gpu
+    '''
     similar_faces = find_similar_faces(mugshot_path, target_img_path)
 
     if not similar_faces or similar_faces[0][0] < threshold:

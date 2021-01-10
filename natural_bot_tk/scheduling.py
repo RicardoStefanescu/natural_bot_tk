@@ -139,9 +139,7 @@ def generate_scheduling_function(person_seed,
 
         results = []
         for _ in range(amount):
-            rand_amount = np.random.randint(1, total)
-            print(i)
-            print(day_minutes)
+            rand_amount = np.random.randint(1, total)\
             for i in range(len(day_minutes)):
                 # Tomamos las papeletas de ese min
                 count = day_minutes[i]
