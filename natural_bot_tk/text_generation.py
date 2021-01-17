@@ -4,9 +4,7 @@ import re
 import numpy as np
 import tensorflow as tf
 
-import resources.gpt2.model as model
-import resources.gpt2.sample as sample
-import resources.gpt2.encoder as encoder
+from .resources.gpt2 import model, sample, encoder
 
 
 class GPT2:

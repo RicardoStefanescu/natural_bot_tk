@@ -13,8 +13,6 @@ from .resources.keyboard_layouts import us_layout
 
 class Mouse:
     def __init__(self, screen_size):
-        self._nervousness = 0.5
-        self._control = 0.5
         self._s_width, self._s_height = screen_size
 
     def left_click(self):

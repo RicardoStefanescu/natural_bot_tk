@@ -9,7 +9,6 @@ from gensim.utils import simple_preprocess
 from gensim.parsing.preprocessing import STOPWORDS
 
 from nltk.stem import WordNetLemmatizer, SnowballStemmer
-from nltk.stem.porter import *
 from nltk.corpus import wordnet as wn
 from nltk import word_tokenize, pos_tag
 

@@ -2,7 +2,10 @@ import requests
 import os
 
 from .natural_input import Keyboard, Mouse
-from .content_generation import find_similar_faces, replace_face, replace_best_face
+from .img_generation import find_similar_faces, replace_face, replace_best_face
+from .text_generation import GPT2
+from .scheduling import generate_scheduling_function, Occupation
+from .reaction import Interest, get_sentiment, get_keywords, estimate_reaction
 
 __all__ = [
     'Keyboard',
@@ -11,6 +14,16 @@ __all__ = [
     'find_similar_faces',
     'replace_face',
     'replace_best_face',
+
+    'GPT2',
+
+    'generate_scheduling_function',
+    'Occupation',
+
+    'Interest',
+    'get_sentiment',
+    'get_keywords',
+    'estimate_reaction'
 ]
 
 def download_models():

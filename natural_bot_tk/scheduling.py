@@ -43,11 +43,11 @@ def generate_scheduling_function(person_seed,
     remaining_time -= work_time
 
     # Chores
-    total_chores_time = np.random.triangular(hour2min(1), hour2min(3), hour2min(min2hour(remaining_time) - 1))
+    total_chores_time = np.random.triangular(hour2min(1), hour2min(3), remaining_time)
     remaining_time -= total_chores_time
 
     # Breaks
-    total_free_breaks_time = np.random.triangular(hour2min(1), hour2min(2), hour2min(min2hour(remaining_time) - 1))
+    total_free_breaks_time = np.random.triangular(0, remaining_time/2, remaining_time)
     remaining_time -= total_free_breaks_time
     np.random.seed()
     

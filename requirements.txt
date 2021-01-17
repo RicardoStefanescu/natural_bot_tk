@@ -1,17 +1,9 @@
-# General
 numpy
 matplotlib
 pandas
 Pillow
-
-# Examples
-selenium
-
-# Input
 pyautogui
 opencv-python
-
-# Content generation
 cffi
 cloudpickle
 cycler
@@ -35,9 +27,7 @@ torch
 torchvision
 tqdm
 face-recognition
-
-
-# Content reaction
+tensorflow
 gensim
 textblob
 nltk

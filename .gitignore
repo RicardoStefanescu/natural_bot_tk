@@ -1,6 +1,4 @@
 *.pyc
-*.ipynb
-*.png
+.ipynb_checkpoints
 
-# Models
-vox-10segments.pth.tar
+natural_bot_tk/resources/models/*
